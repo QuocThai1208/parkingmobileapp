@@ -23,6 +23,8 @@ import LotDetail from "./components/ParkingLots/LotDetail";
 import BookingDetail from "./components/ParkingLots/BookingDetail";
 import PaymentConfirmation from "./components/ParkingLots/PaymentConfirmation";
 import BookingHistory from "./components/User/BookingHistory";
+import TransactionDetail from "./components/User/TransactionDetail";
+import Notification from "./components/Home/Notification";
 
 
 const Stack = createNativeStackNavigator();
@@ -31,6 +33,7 @@ const HomeStachNavigator = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Home" component={Home} options={{ title: "Trang chủ", headerShown: false }} />
+      <Stack.Screen name="Notification" component={Notification} options={{headerShown: false }} />
     </Stack.Navigator>
   )
 }
@@ -81,7 +84,8 @@ const WalletStachNavigator = () => {
   return (
     <Stack.Navigator >
       <Stack.Screen name="Wallet" component={Wallet} options={{ headerShown: false }} />
-      <Stack.Screen name="TransactionOptions" component={TransactionOptions} />
+      <Stack.Screen name="TransactionOptions" component={TransactionOptions} options={{ headerShown: false }}/>
+      <Stack.Screen name="TransactionDetail" component={TransactionDetail} options={{ headerShown: false }} />
     </Stack.Navigator>
   )
 }
@@ -100,12 +104,29 @@ const TabNavigator = () => {
         <Tab.Screen name="tab-vehicle" component={VehicleStachNavigator} options={{ title: "Phương tiện", tabBarIcon: () => <Icon size={24} source="car" /> }} />
         <Tab.Screen name="tab-parking-lots" component={ParkingLotNavigator} options={{ title: "Bãi đỗ", tabBarIcon: () => <Icon size={24} source="map-marker" /> }} />
         <Tab.Screen name="tab-wallet" component={WalletStachNavigator} options={{ title: "Ví", tabBarIcon: () => <Icon size={24} source="wallet" /> }} />
-        <Tab.Screen name="tab-profile" component={ProfileStachNavigator} options={{ title: "Profile", tabBarIcon: () => <Icon size={24} source="account" /> }} />
+        <Tab.Screen name="tab-profile" component={ProfileStachNavigator} options={{ title: "Tôi", tabBarIcon: () => <Icon size={24} source="account" /> }} />
       </>
       }
     </Tab.Navigator>
   )
 }
+
+const linking = {
+  prefixes: ['parkingapp://'],
+  config: {
+    screens: {
+      TabNavigator: { 
+        screens: {
+          WalletStack: { 
+            screens: {
+              Wallet: 'wallet',
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
@@ -113,7 +134,7 @@ const App = () => {
     <PaperProvider>
       <MyUserConText.Provider value={user}>
         <MyDispatchContext.Provider value={dispatch}>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <TabNavigator />
           </NavigationContainer>
           <Toast />

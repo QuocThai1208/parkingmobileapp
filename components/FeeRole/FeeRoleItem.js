@@ -61,9 +61,6 @@ const FeeRoleItem = ({ item }) => {
               >
                 {infoVehicle[item.fee_type]}
               </Text>
-              <Text style={{ fontSize: 13, color: "#636E72" }}>
-                Giá niêm yết: {item.amount.toLocaleString()}đ
-              </Text>
             </View>
           </View>
 
@@ -107,7 +104,7 @@ const FeeRoleItem = ({ item }) => {
             }}
           >
             <Text style={{ fontSize: 14, color: "#2D3436", fontWeight: "500" }}>
-              Tổng phí dự kiến:
+              Gia niêm yết:
             </Text>
             <Text
               style={{
@@ -116,32 +113,9 @@ const FeeRoleItem = ({ item }) => {
                 color: hasSurcharge ? "#E65100" : "#2E7D32",
               }}
             >
-              {item.total_fee.toLocaleString()}đ
+              {item.amount?.toLocaleString()}đ
             </Text>
           </View>
-
-          {hasSurcharge && (
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: 8,
-                alignItems: "center",
-              }}
-            >
-              <Ionicons name="warning" size={16} color="#E65100" />
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: "#E65100",
-                  marginLeft: 5,
-                  fontWeight: "600",
-                  flex: 1,
-                }}
-              >
-                {item.note} (+{item.surcharge.toLocaleString()}đ)
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Footer: Hiệu lực */}

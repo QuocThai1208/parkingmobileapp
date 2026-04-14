@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 
-const BASE_URL = "https://2003-123-20-137-172.ngrok-free.app/api/";
+const BASE_URL = "https://47a3-123-20-217-17.ngrok-free.app/api/";
 
 export const endpoints = {
   login: "auth/login",
@@ -10,13 +10,18 @@ export const endpoints = {
   allParkingLot: "parking-lots",
   parkingLotDetail: (id) => `parking-lots/${id}`,
 
-  parkingLogs: "parking-logs/",
+  parkingLogs: "parking-logs",
   countToday: "parking-logs/count-today/",
   
   slotCheckPrice: (id) => `parking-slots/${id}/check-fee`,
 
   countParking: "stats/parking-logs/compare",
-  totalTimeParking: "stats/parking-logs/total-time/",
+  totalTimeParking: "stats/parking-logs/total-time",
+  
+  countUnReadNotification: "notifications/unread/count",
+  myNotification: "notifications",
+
+  isReadNotification: (id) => `notifications/${id}/is-read`,
 
   users: "users/",
   register: "users/register",
@@ -25,7 +30,7 @@ export const endpoints = {
   wallet: "wallet",
   walletTransaction: "transactions",
 
-  deposit: "wallet/deposit",
+  deposit: "payment-momo/deposit",
   withdraw: "wallet/withdraw",
 
   vehicles: "vehicles",

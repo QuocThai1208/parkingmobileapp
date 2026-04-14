@@ -12,10 +12,25 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "scheme": "parkingmobileapp",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smartparking.parkingmobileapp",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["momo"]
+      }
     },
     "android": {
+      "package": "com.smartparking.parkingmobileapp",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "parkingmobileapp"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
