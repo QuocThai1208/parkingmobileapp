@@ -18,20 +18,6 @@ const Profile = () => {
   const dispatch = useContext(MyDispatchContext);
   const { top } = useSafeAreaInsets();
   const nav = useNavigation();
-  const infoUser = [
-    {
-      field: "address",
-      label: "Địa chỉ:",
-    },
-    {
-      field: "birth",
-      label: "Năm sinh:",
-    },
-    {
-      field: "age",
-      label: "Tuổi:",
-    },
-  ];
   const nameIcon = {
     address: "location-outline",
     birth: "calendar-outline",
@@ -50,6 +36,24 @@ const Profile = () => {
       type: "logout",
     });
   };
+
+  const InfoItem = ({ icon, label, value }) => (
+  <View style={{ 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 16, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#F8F9FA' 
+  }}>
+    <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#F8F9FA', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+      <Ionicons name={icon} size={20} color="#2D3436" />
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={{ fontSize: 12, color: "#B2BEC3", marginBottom: 2 }}>{label}</Text>
+      <Text style={{ fontSize: 16, color: "#2D3436", fontWeight: '500' }}>{value}</Text>
+    </View>
+  </View>
+);
 
   return (
     <View style={[Styles.container, { backgroundColor: "white" }]}>
@@ -95,40 +99,27 @@ const Profile = () => {
           <Text style={Styles.infoSectionTitle}>Thông tin cá nhân</Text>
           <Divider />
 
-          {infoUser.map((item) => (
-            <View key={`user${item.field}`} style={Styles.userInfoRow}>
-              <View style={Styles.userInfoLabelContainer}>
-                <Ionicons
-                  color={Styles.roleBadgeIcon.color}
-                  name={nameIcon[item.field]}
-                  size={24}
-                />
-                <Text style={{ fontSize: 18, marginLeft: 15 }}>
-                  {item.label}
-                </Text>
-              </View>
-              <Text style={{ fontSize: 18 }}>{user._j[item.field]}</Text>
-            </View>
-          ))}
+        <View style={{ flex: 1, paddingHorizontal: 20 }}>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: "#B2BEC3", marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+            Thông tin cá nhân
+          </Text>
+          
+          {/* Render thông tin thủ công hoặc qua map để tùy chỉnh icon */}
+          <InfoItem icon="mail-outline" label="Email" value={user._j.email} />
+          <InfoItem icon="location-outline" label="Địa chỉ" value={user._j.address} />
+          <InfoItem icon="calendar-outline" label="Năm sinh" value={user._j.birth} />
+          <InfoItem icon="accessibility-outline" label="Tuổi" value={`${user._j.age} tuổi`} />
+        </View>
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 15 }}>
+      <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
         <TouchableOpacity
           onPress={() => nav.navigate("ProfileUpdate")}
           style={Styles.buttonPrimary}
         >
           <Ionicons name={nameIcon.update} size={24} color="white" />
           <Text style={Styles.buttonPrimaryText}>Chỉnh sửa hồ sơ</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={logOut} style={Styles.buttonSecondary}>
-          <Ionicons
-            name={nameIcon.logOut}
-            size={24}
-            color="rgba(255, 0, 0, 0.7)"
-          />
-          <Text style={Styles.buttonSecondaryText}>Đăng xuất</Text>
         </TouchableOpacity>
       </View>
       <Modal
