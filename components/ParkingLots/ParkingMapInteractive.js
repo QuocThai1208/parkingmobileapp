@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { SvgXml } from 'react-native-svg'; 
-import { COLORS, getSlotColor } from './LotDetail';
+import { getSlotColor } from './LotDetail';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import Toast from 'react-native-toast-message';
 
@@ -55,7 +55,7 @@ const ParkingMapInteractive = ({ svgUrl, slots, selectedSlot, onSlotSelect }) =>
         const svgElement = xmlDoc.getElementsByTagName('svg')[0];
 
         svgData.rects.forEach(info => {
-            const slot = slots.find(s => `slot-${s.slot_number}-${s.vehicle_type}-${s.is_vip}` === info.idAttr);
+            const slot = slots.find(s => `slot-${s.slot_number}-${s.vehicle_type}` === info.idAttr);
             if (slot) {
                 const rectNode = xmlDoc.getElementById(info.idAttr);
                 if (rectNode) {
@@ -89,34 +89,6 @@ const ParkingMapInteractive = ({ svgUrl, slots, selectedSlot, onSlotSelect }) =>
         >
             {/* LỚP 1: HIỂN THỊ SVG */}
             <SvgXml xml={renderSvgDisplay()} width="100%" height="100%" />
-
-            {/* LỚP 2: CÁC VÙNG BẤM TÀNG HÌNH (Dùng Touchable chuẩn React Native) */}
-            <View style={StyleSheet.absoluteFill}>
-                {mapLayout.width > 0 && svgData.rects.map((info, index) => {
-                    const slot = slots.find(s => `slot-${s.slot_number}-${s.vehicle_type}-${s.is_vip}` === info.idAttr);
-                    if (!slot) return null;
-
-                    // Tính toán tỷ lệ scale giữa tọa độ SVG gốc và kích thước thực tế trên màn hình
-                    const scaleX = mapLayout.width / parseFloat(svgData.viewBox[2]);
-                    const scaleY = mapLayout.height / parseFloat(svgData.viewBox[3]);
-
-                    return (
-                        <TouchableOpacity
-                            key={`btn-${index}`}
-                            activeOpacity={0.7}
-                            style={{
-                                position: 'absolute',
-                                left: info.x * scaleX,
-                                top: info.y * scaleY,
-                                width: info.w * scaleX,
-                                height: info.h * scaleY,
-                                backgroundColor: 'transparent', 
-                            }}
-                            onPress={() => onSlotSelect(slot)}
-                        />
-                    );
-                })}
-            </View>
         </View>
     );
 };

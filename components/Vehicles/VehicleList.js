@@ -61,7 +61,7 @@ const VehicleList = () => {
                         <Ionicons name="add-circle-outline" size={28} color="white" />
                     </TouchableOpacity>
                     <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Phương tiện của tôi</Text>
-                    <TouchableOpacity onPress={() => nav.navigate("ParkingLots")}>
+                    <TouchableOpacity onPress={() => nav.navigate("ParkingLotPicker")}>
                         <Ionicons name="clipboard-outline" size={26} color="white" />
                     </TouchableOpacity>
                 </View>

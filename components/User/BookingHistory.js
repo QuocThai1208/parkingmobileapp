@@ -44,6 +44,7 @@ const BookingHistory = () => {
   const fetchBookingHistory = async () => {
     try {
       const res = await API.get(endpoints.bookings);
+      console.log("Booking history response: ", res.data);
       setHistory(res.data);
     } catch (e) {
       console.log("error fetchBookingHistory: ", e);
@@ -82,17 +83,13 @@ const BookingHistory = () => {
         <View style={styles.cardBody}>
           <View style={styles.infoRow}>
             <View style={styles.mainInfo}>
-              <Text style={styles.label}>Vị trí đỗ</Text>
-              <Text style={styles.value}>{item.slot_number}</Text>
-            </View>
-            <View style={styles.mainInfo}>
               <Text style={styles.label}>Phương tiện</Text>
               <Text style={styles.value}>{item.vehicle_name}</Text>
             </View>
             <View style={styles.mainInfo}>
               <Text style={styles.label}>Tiền cọc</Text>
               <Text style={[styles.value, { color: "#E67E22" }]}>
-                {item.deposit_amount.toLocaleString()}đ
+                {item.fee.toLocaleString()}đ
               </Text>
             </View>
           </View>
@@ -103,10 +100,27 @@ const BookingHistory = () => {
               <Ionicons name="time-outline" size={16} color="#B2BEC3" />
               <Text style={styles.timeText}>
                 {item.start_time.split(" ")[1] == item.end_time.split(" ")[1]
-                  ? `${item.start_time.split(" ")[1]} - ${item.end_time}`
+                  ? `${item.start_time.split(" ")[0]} - ${item.end_time}`
                   : `${item.start_time} - ${item.end_time}`}
               </Text>
             </View>
+            {item.expired_time && (
+              <View style={[styles.timeLine, { marginTop: 6 }]}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={16}
+                  color={item.status === "EXPIRED" ? "#FF4D4D" : "#FFC107"}
+                />
+                <Text
+                  style={[
+                    styles.timeText,
+                    { color: item.status === "EXPIRED" ? "#FF4D4D" : "#FFC107", fontWeight: "600" },
+                  ]}
+                >
+                  {item.status === "EXPIRED" ? "Đã" : "Sẽ"} hết hạn lúc: {item.expired_time}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 

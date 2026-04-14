@@ -21,24 +21,13 @@ export const infoVehicle = {
 };
 
 export const COLORS = {
-  VIP: "#00CEC9", // Vàng kim - Chỉ để trang trí hoặc viền
   OCCUPIED: "#FF4D4D", // Đỏ - Có xe
-  BOOKED: "#FFC107", // Vàng - Đã đặt
   AVAILABLE: "#4CAF50", // Xanh - Trống
   SELECTED: "#6A5AE0", // Tím - Đang chọn
-  LOCKED: "#E0E0E0", // Xám - Không được chọn (Nếu không VIP)
-  DEFAULT_TEXT: "#2D3436",
-  SELECTED_TEXT: "#FFFFFF",
 };
 
 export const getSlotColor = (slot, isSelected) => {
-  // Logic VIP Disabled: Nếu không phải VIP, nó bị khóa
-  if (slot.is_vip && !isSelected) return COLORS.VIP;
-
-  // Logic ưu tiên màu sắc thông thường
-  if (isSelected) return COLORS.SELECTED;
   if (slot.is_occupied) return COLORS.OCCUPIED;
-  if (slot.is_booked) return COLORS.BOOKED;
   return COLORS.AVAILABLE;
 };
 
@@ -48,10 +37,17 @@ const LotDetail = () => {
   const { lotId } = router.params;
   const { top } = useSafeAreaInsets();
   const [lotData, setLotData] = useState(null);
-  const [checkFee, setCheckFee] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [loadingPrice, setLoadingPrice] = useState(false);
   const nav = useNavigation();
+
+  const getStats = () => {
+    if (!lotData || !lotData.slots) return { occupied: 0, available: 0 };
+    const occupied = lotData.slots.filter(s => s.is_occupied).length;
+    const available = lotData.slots.filter(s => !s.is_occupied).length;
+    return { occupied, available };
+  };
+
+  const { occupied, available } = getStats();
 
   const handleSlotPress = (slot) => {
     if (!slot.is_vip) {
@@ -114,27 +110,11 @@ const LotDetail = () => {
     }
   };
 
-  const loadCheckFee = async () => {
-    try {
-        setLoadingPrice(true);
-      const res = await API.get(endpoints.slotCheckPrice(selectedSlot?.id));
-      setCheckFee(res.data?.result);
-    } catch (e) {
-      console.log("error loadCheckFee: ", e);
-    } finally {
-        setLoadingPrice(false);
-    }
-  };
 
   useEffect(() => {
     fetchLotData();
   }, [lotId]);
 
-  useEffect(() => {
-    if (selectedSlot) {
-      loadCheckFee();
-    }
-  }, [selectedSlot?.id]);
 
   if (!lotData) {
     return (
@@ -253,6 +233,18 @@ const LotDetail = () => {
               {lotData.address}
             </Text>
           </View>
+          <Divider style={{ marginVertical: 10 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: COLORS.OCCUPIED, fontWeight: '800', fontSize: 18 }}>{occupied}</Text>
+              <Text style={{ fontSize: 12, color: '#636E72' }}>Đang có xe</Text>
+            </View>
+            <View style={{ width: 1, backgroundColor: '#F1F3F5', height: '100%' }} />
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: COLORS.AVAILABLE, fontWeight: '800', fontSize: 18 }}>{available}</Text>
+              <Text style={{ fontSize: 12, color: '#636E72' }}>Còn trống</Text>
+            </View>
+          </View>
         </View>
 
         <Card
@@ -282,20 +274,6 @@ const LotDetail = () => {
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#2D3436" }}>
               Sơ đồ vị trí ({lotData?.map_svgs[0]?.floor_display})
             </Text>
-            <View
-              style={{
-                backgroundColor: "#EEEDFF",
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 8,
-              }}
-            >
-              <Text
-                style={{ fontSize: 12, color: "#6A5AE0", fontWeight: "700" }}
-              >
-                SCREEN
-              </Text>
-            </View>
           </View>
 
           {/* Bản đồ SVG */}
@@ -328,15 +306,10 @@ const LotDetail = () => {
           >
             {renderLegend("Trống", COLORS.AVAILABLE)}
             {renderLegend("Có xe", COLORS.OCCUPIED)}
-            {renderLegend("Có thể đặt", COLORS.VIP)}
-            {renderLegend("Đã đặt", COLORS.BOOKED)}
-            {renderLegend("Khóa", COLORS.LOCKED)}
-            {renderLegend("Chọn", COLORS.SELECTED)}
           </View>
         </Card>
       </ScrollView>
 
-      {/* 4. BOTTOM ACTION PANEL: Cố định phía dưới, style Cinema */}
       <View
         style={{
           position: "absolute",
@@ -362,119 +335,44 @@ const LotDetail = () => {
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             marginBottom: 15,
+            width: "100%",
           }}
         >
-          {/* Cột trái: Thông tin Slot & Giá */}
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: "#B2BEC3", fontSize: 12, fontWeight: "600" }}>
-              {selectedSlot
-                ? <>
-                Vị trí: {selectedSlot.slot_number}     
-                <Ionicons name="car-sport" size={16} color="#6A5AE0"  />
-                </>
-                : "Chưa chọn vị trí"}
-            </Text>
-
-            {selectedSlot && (
-              <View style={{ marginTop: 2 }}>
-                {loadingPrice ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#6A5AE0"
-                    style={{ alignSelf: "flex-start" }}
-                  />
-                ) : checkFee ? (
-                  <View>
-                    <Text
-                      style={{
-                        fontSize: 22,
-                        fontWeight: "900",
-                        color: "#6A5AE0",
-                      }}
-                    >
-                      {checkFee.total_fee.toLocaleString()}đ/
-                      <Text style={{
-                        fontSize: 12,
-                        fontWeight: "900",
-                        color: "#6A5AE0",
-                      }}>h</Text>
-                    </Text>
-
-                    {/* Hiển thị phụ phí và note nếu surcharge > 0 */}
-                    {checkFee.surcharge > 0 && (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginTop: 2,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            color: "#FF4D4D",
-                            fontWeight: "700",
-                          }}
-                        >
-                          +{checkFee.surcharge.toLocaleString()}đ
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            color: "#636E72",
-                            marginLeft: 4,
-                            fontStyle: "italic",
-                          }}
-                        >
-                          ({checkFee.note})
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                ) : null}
-              </View>
-            )}
-          </View>
-
-          {/* Cột phải: Nút Tiếp tục */}
           <TouchableOpacity
             onPress={() =>
               nav.navigate("BookingDetail", {
                 lotId: lotId,
-                slotId: selectedSlot.id,
-                slotNumber: selectedSlot.slot_number,
-                vehicleType: selectedSlot.vehicle_type,
-                floorDisplay:lotData?.map_svgs[0]?.floor_display
+                lotName: lotData.name,
               })
             }
-            disabled={!selectedSlot || loadingPrice}
+            disabled={available === 0}
             style={{
-              backgroundColor: selectedSlot ? "#6A5AE0" : "#E4E7EB",
+              backgroundColor: !(available === 0) ? "#6A5AE0" : "#E4E7EB",
               paddingVertical: 14,
               paddingHorizontal: 25,
               borderRadius: 16,
               flexDirection: "row",
               alignItems: "center",
-              elevation: selectedSlot ? 8 : 0,
+              elevation: !(available === 0) ? 8 : 0,
             }}
           >
             <Text
               style={{
-                color: selectedSlot ? "white" : "#A4A9AE",
+                color: !(available === 0) ? "white" : "#A4A9AE",
                 fontSize: 16,
                 fontWeight: "700",
                 marginRight: 5,
               }}
             >
-              Tiếp tục
+              Đặt chỗ 
             </Text>
             <Ionicons
               name="arrow-forward"
               size={18}
-              color={selectedSlot ? "white" : "#A4A9AE"}
+              color={!(available === 0) ? "white" : "#A4A9AE"}
             />
           </TouchableOpacity>
         </View>

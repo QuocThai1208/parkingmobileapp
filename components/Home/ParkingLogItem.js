@@ -57,7 +57,7 @@ const ParkingLogItem = ({ item }) => {
                     <Ionicons color="#1C86EE" name="time-outline" size={22} />
                     <Text style={{ fontWeight: 600, marginLeft: 10 }}>Thời gian: {formatTime(item.duration_minutes)}</Text>
                 </View>
-                <Text style={{ color: '#CD2626', fontWeight: 600, fontSize: 18 }}>{item.fee} đ</Text>
+                <Text style={{ color: '#CD2626', fontWeight: 600, fontSize: 18 }}>{item.fee?.toLocaleString()} đ</Text>
             </View>
         </Card>
     )

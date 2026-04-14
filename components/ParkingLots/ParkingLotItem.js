@@ -50,25 +50,6 @@ const ParkingLotItem = ({ parkingLot }) => {
                 <SlotItem icon="bus" label="Bus" count={parkingLot.bus_slots} color="#10B981" />
                 <SlotItem icon="subway" label="Truck" count={parkingLot.truck_slots} color="#F59E0B" />
             </View>
-
-            {/* 4. Footer: Threshold (Ngưỡng giải phóng) */}
-            <View style={{ 
-                marginTop: 15, 
-                backgroundColor: '#F9FAFB', 
-                padding: 10, 
-                borderRadius: 10, 
-                flexDirection: 'row', 
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="speedometer-outline" size={16} color="#6B7280" />
-                    <Text style={{ fontSize: 13, color: '#6B7280', marginLeft: 6 }}>Ngưỡng lấp đầy bãi:</Text>
-                </View>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#111827' }}>
-                    {(parkingLot.threshold_release * 100)}%
-                </Text>
-            </View>
         </Card>    
         </TouchableOpacity>
     );

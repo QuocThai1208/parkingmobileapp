@@ -12,24 +12,26 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
+import API, { endpoints } from "../../configs/Apis";
 
 const PaymentConfirmation = ({ route, navigation }) => {
   const { bookingData, reviewData, vehicleData } = route.params;
 
   const handlePayment = async () => {
-    try{
+    try {
       const res = await API.post(endpoints.bookings, {
         vehicle: bookingData.vehicle,
-        slot: bookingData.slot,
         lot: bookingData.lot,
         start_time: bookingData.start_time,
         end_time: bookingData.end_time,
       });
 
-      if (res.status === 201) {}
-
-    }
-    catch(e){
+      if (res.status === 201) {
+        navigation.navigate("tab-profile", {
+          screen: "BookingHistory", 
+        });
+      }
+    } catch (e) {
       Toast.show({
         type: "error",
         text1: "Thanh toán thất bại",
@@ -85,9 +87,7 @@ const PaymentConfirmation = ({ route, navigation }) => {
               </View>
               <View style={{ marginLeft: 12 }}>
                 <Text style={styles.infoLabel}>Vị trí đỗ</Text>
-                <Text style={styles.infoMainText}>
-                  {bookingData.floorDisplay} - {bookingData.slotNumber}
-                </Text>
+                <Text style={styles.infoMainText}>{bookingData.lotName}</Text>
               </View>
             </View>
 
@@ -100,8 +100,23 @@ const PaymentConfirmation = ({ route, navigation }) => {
               <View style={{ marginLeft: 12 }}>
                 <Text style={styles.infoLabel}>Thời gian dự kiến</Text>
                 <Text style={styles.infoMainText}>
-                  {dayjs(bookingData.start_time).format("HH:mm, DD/MM")} -{" "}
-                  {dayjs(bookingData.end_time).format("HH:mm, DD/MM")}
+                  {dayjs(bookingData.start_time).isSame(dayjs(bookingData.end_time), "day",)
+                    ? `${dayjs(bookingData.start_time).format("HH:mm")} - ${dayjs(bookingData.end_time).format("HH:mm, DD/MM")}`
+                    : `${dayjs(bookingData.start_time).format("HH:mm, DD/MM")} - ${dayjs(bookingData.end_time).format("HH:mm, DD/MM")}`}
+                </Text>
+              </View>
+            </View>
+
+            <Divider style={styles.infoDivider} />
+
+            <View style={styles.infoRow}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="time" size={18} color="#6A5AE0" />
+              </View>
+              <View style={{ marginLeft: 12 }}>
+                <Text style={styles.infoLabel}>Thời gian hết hạn giữ chỗ</Text>
+                <Text style={styles.infoMainText}>
+                  {dayjs(bookingData.start_time).add(10, "minute").format("HH:mm, DD/MM")}
                 </Text>
               </View>
             </View>
@@ -163,7 +178,7 @@ const PaymentConfirmation = ({ route, navigation }) => {
                   <Text style={[styles.receiptDate, { color: "#E67E22" }]}>
                     Phí đặt trước
                   </Text>
-                  <Text style={[styles.receiptPrice, { color: "#E67E22" } ]}>
+                  <Text style={[styles.receiptPrice, { color: "#E67E22" }]}>
                     {reviewData.fee_booking.toLocaleString()}đ
                   </Text>
                 </View>
@@ -297,7 +312,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     borderWidth: 1,
     borderColor: "#E67E22",
-    borderStyle: "dashed"
+    borderStyle: "dashed",
   },
   receiptItem: { marginBottom: 12 },
   receiptHeader: {
@@ -371,4 +386,3 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
- 

@@ -16,7 +16,6 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import Toast from "react-native-toast-message";
-import { infoVehicle } from "./LotDetail";
 import API, { endpoints } from "../../configs/Apis";
 import { ActivityIndicator, Divider } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
@@ -26,7 +25,7 @@ dayjs.extend(timezone);
 dayjs.tz.setDefault("Asia/Ho_Chi_Minh");
 
 const BookingDetail = ({ route, navigation }) => {
-  const { lotId, slotId, slotNumber, vehicleType, floorDisplay } = route.params;
+  const { lotId, lotName } = route.params;
   const [vehicles, setVehicles] = useState([]);
   const [reviewData, setReviewData] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -41,20 +40,20 @@ const BookingDetail = ({ route, navigation }) => {
   const loadVehicles = async () => {
     try {
       const res = await API.get(endpoints["vehicles"]);
-      setVehicles(res.data.filter((v) => v.type === vehicleType));
+      setVehicles(res.data);
     } catch (e) {
       console.log("error loadvehicles: ", e);
     }
   };
 
   const fetchBookingReview = async () => {
-    if (!selectedVehicle || !startTime || !endTime || !slotId) return;
+    if (!selectedVehicle || !startTime || !endTime) return;
 
     setLoadingReview(true);
     try {
       const response = await API.post(endpoints["bookingReview"], {
         vehicle: selectedVehicle.id,
-        slot: slotId,
+        lot: lotId,
         start_time: dayjs(startTime).format("YYYY-MM-DD HH:mm:ss"),
         end_time: dayjs(endTime).format("YYYY-MM-DD HH:mm:ss"),
       });
@@ -73,19 +72,39 @@ const BookingDetail = ({ route, navigation }) => {
 
   useEffect(() => {
     fetchBookingReview();
-  }, [selectedVehicle, startTime, endTime, slotId]);
+  }, [selectedVehicle, startTime, endTime]);
 
   const onChangeTime = (event, selectedDate) => {
     setShowPicker({ ...showPicker, show: false });
     if (!selectedDate) return;
 
     if (showPicker.field === "start") {
-      setStartTime(selectedDate);
+      const now = dayjs();
+      const maxAllowedTime = now.add(10, "minute"); // Thời gian hiện tại + 10 phút
+
+      // Nếu thời gian chọn > thời gian hiện tại + 10 phút
+      if (dayjs(selectedDate).isAfter(maxAllowedTime)) {
+        Toast.show({
+          type: "error",
+          text1: "Thời gian không hợp lệ",
+          text2: "Bạn chỉ được đặt chỗ trễ tối đa 10 phút so với hiện tại.",
+        });
+
+        // Set về thời gian tối đa cho phép
+        setStartTime(maxAllowedTime.toDate());
+      } else if (dayjs(selectedDate).isBefore(now)) {
+        // Chặn  trường hợp chọn thời gian trong quá khứ
+        setStartTime(now.toDate());
+      } else {
+        setStartTime(selectedDate);
+      }
       // Tự động đẩy EndTime lên nếu EndTime < StartTime + 1h
       const minEnd = new Date(selectedDate.getTime() + 60 * 60 * 1000);
       if (endTime < minEnd) setEndTime(minEnd);
     } else {
       setEndTime(selectedDate);
+      const minEnd = new Date(startTime.getTime() + 60 * 60 * 1000);
+      if (selectedDate < minEnd) setEndTime(minEnd);
     }
   };
 
@@ -111,12 +130,10 @@ const BookingDetail = ({ route, navigation }) => {
 
     const bookingData = {
       vehicle: selectedVehicle.id,
-      slot: slotId,
       lot: lotId,
+      lotName: lotName,
       start_time: dayjs(startTime).format("YYYY-MM-DD HH:mm:ss"),
       end_time: dayjs(endTime).format("YYYY-MM-DD HH:mm:ss"),
-      slotNumber: slotNumber,
-      floorDisplay: floorDisplay,
     };
 
     const vehicleData = {
@@ -133,7 +150,6 @@ const BookingDetail = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header tương tự màn hình trước */}
       <LinearGradient colors={["#6A5AE0", "#8781FF"]} style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -150,20 +166,6 @@ const BookingDetail = ({ route, navigation }) => {
           paddingBottom: 140,
         }}
       >
-        <View style={styles.sectionCard}>
-          <View style={styles.infoRow}>
-            <View style={styles.iconBox}>
-              <Ionicons name="bookmark" size={24} color="#6A5AE0" />
-            </View>
-            <View>
-              <Text style={styles.label}>Vị trí bãi đỗ</Text>
-              <Text style={styles.value}>
-                {slotNumber} ({infoVehicle[vehicleType]})
-              </Text>
-            </View>
-          </View>
-        </View>
-
         {/* 2. Chọn phương tiện */}
         <Text style={styles.sectionTitle}>Chọn phương tiện của bạn</Text>
         {vehicles.map((item) => (
@@ -190,6 +192,16 @@ const BookingDetail = ({ route, navigation }) => {
 
         {/* 3. Chọn thời gian */}
         <Text style={styles.sectionTitle}>Thời gian đỗ xe</Text>
+        <Text
+          style={{
+            fontSize: 11,
+            color: "#636E72",
+            marginBottom: 10,
+            fontStyle: "italic",
+          }}
+        >
+          * Lưu ý: Thời gian bắt đầu không quá 10 phút so với hiện tại.
+        </Text>
         <View style={styles.timeContainer}>
           <TouchableOpacity
             style={styles.timeBox}
@@ -381,26 +393,6 @@ const BookingDetail = ({ route, navigation }) => {
                 </View>
               ))}
 
-              {/* Phí đặt chỗ (nếu có trong dữ liệu) */}
-              {reviewData.fee_booking > 0 && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    paddingVertical: 12,
-                    borderTopWidth: 1,
-                    borderTopColor: "#F1F3F5",
-                  }}
-                >
-                  <Text style={{ color: "#FFC107", fontSize: 12, fontWeight: "700" }}>
-                    Phí đặt trước
-                  </Text>
-                  <Text style={{ fontWeight: "600", color: "#FFC107" }}>
-                    {reviewData.fee_booking.toLocaleString()}đ
-                  </Text>
-                </View>
-              )}
-
               {/* Tổng kết cuối cùng */}
               <View
                 style={{
@@ -456,26 +448,74 @@ const BookingDetail = ({ route, navigation }) => {
       </ScrollView>
       {/* Bottom Panel */}
       <View style={styles.bottomPanel}>
-        <View>
-          <Text style={styles.totalLabel}>Tổng thời gian</Text>
-          <Text style={styles.totalValue}>
-            {(() => {
-              const totalMinutes = dayjs(endTime).diff(
-                dayjs(startTime),
-                "minute",
-              );
-              const hours = Math.floor(totalMinutes / 60);
-              const mins = totalMinutes % 60;
-              return `${hours > 0 ? `${hours} Giờ ` : ""}${mins} Phút`;
-            })()}
+        {/* Thông báo quy định thời gian - Thêm mới */}
+        <View
+          style={{
+            position: "absolute",
+            top: -40, // Đẩy lên trên panel một chút
+            left: 8,
+            right: 8,
+            backgroundColor: "#FFF9DB", // Màu nền vàng nhạt cảnh báo
+            padding: 8,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "#FFE066",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons
+            name="information-circle"
+            size={16}
+            color="#F59F00"
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={{ fontSize: 11, color: "#856404", flex: 1, lineHeight: 16 }}
+          >
+            Lịch này sẽ được áp dụng nếu bạn vào bãi từ
+            <Text style={{ fontWeight: "700" }}>
+              {" "}
+              {dayjs(startTime).subtract(10, "minute").format("HH:mm")}
+            </Text>{" "}
+            đến
+            <Text style={{ fontWeight: "700" }}>
+              {" "}
+              {dayjs(startTime).add(10, "minute").format("HH:mm")}
+            </Text>
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.btnConfirm}
-          onPress={handleConfirmBooking}
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+          }}
         >
-          <Text style={styles.btnText}>Đặt chỗ ngay</Text>
-        </TouchableOpacity>
+          <View>
+            <Text style={styles.totalLabel}>Tổng thời gian</Text>
+            <Text style={styles.totalValue}>
+              {(() => {
+                const totalMinutes = dayjs(endTime).diff(
+                  dayjs(startTime),
+                  "minute",
+                );
+                const hours = Math.floor(totalMinutes / 60);
+                const mins = totalMinutes % 60;
+                return `${hours > 0 ? `${hours} Giờ ` : ""}${mins} Phút`;
+              })()}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.btnConfirm}
+            onPress={handleConfirmBooking}
+          >
+            <Text style={styles.btnText}>Đặt chỗ ngay</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -499,8 +539,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#2D3436",
-    marginTop: 15,
-    marginBottom: 15,
+    marginTop: 10,
+    marginBottom: 5,
   },
   sectionCard: {
     backgroundColor: "white",
